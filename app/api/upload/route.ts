@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     await writeFile(filePath, buffer);
 
     // Extract chunks
-    const chunks = await extractChunksFromPDF(filePath);
+    const chunks = await extractChunksFromPDF(filePath) || [];
     for (const chunk of chunks) {
       const embedding = await getEmbedding(chunk.text);
       if (!embedding || embedding.length === 0) {
@@ -43,20 +43,12 @@ export async function POST(request: Request) {
     }
 
 
-    // Return
-<<<<<<< HEAD
     return NextResponse.json({ message: "File uploaded & embedded!" }, { status: 200 });
   } catch (err: any) {
     console.error("UPLOAD ROUTE ERROR:", err);
 
     return NextResponse.json(
       { error: err?.message ?? "Unknown error" },
-=======
-    return NextResponse.json({ message: "File uploaded & embedded!" },{ status: 200 });
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Failed to process PDF file: Error is ${err}` },
->>>>>>> 3909b27 (Initial Commit)
       { status: 500 }
     );
   }

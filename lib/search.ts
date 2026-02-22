@@ -19,6 +19,7 @@ export async function searchRelevantChunks(questionEmbedding: number[]) {
       score: chunk.embedding
         ? cosineSimilarity(questionEmbedding, chunk.embedding)
         : 0,
+      page: chunk.id.split("_")[1],
     }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 3); // Return top 3 chunks

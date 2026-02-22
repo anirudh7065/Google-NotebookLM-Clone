@@ -16,7 +16,6 @@ export default async function extractChunksFromPDF(path: string) {
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const content = await page.getTextContent();
-<<<<<<< HEAD
     fullText += content.items
       .map((item: TextItem | TextMarkedContent) => {
         if ("str" in item) {
@@ -26,16 +25,10 @@ export default async function extractChunksFromPDF(path: string) {
         }
       })
       .join(" ");
-=======
-    fullText +=
-      content.items
-        .map((item: TextItem | TextMarkedContent) => item?.str)
-        .join(" ") + "\n\n";
->>>>>>> 3909b27 (Initial Commit)
-  }
 
-  return fullText
-    .split(/\n\s*\n/)
-    .filter((chunk) => chunk.trim().length > 30)
-    .map((text, idx) => ({ id: `chunk_${idx}`, text }));
+    return fullText
+      .split(/\n\s*\n/)
+      .filter((chunk) => chunk.trim().length > 30)
+      .map((text, idx) => ({ id: `chunk_${idx}`, text }));
+  }
 }

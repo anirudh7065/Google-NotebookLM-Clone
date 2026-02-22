@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import ChatViewer from "@/components/ChatViewer"
+import {  toast, Slide } from 'react-toastify';
 
 const Chat = () => {
   // States
@@ -13,9 +14,22 @@ const Chat = () => {
   const [question, setQuestion] = useState<string>("")
   const [questionArray, setQuestionArray] = useState<string[]>([])
   const [submitLoading, setSubmitLoading] = useState<boolean>(false)
+  const [page, setPage] = useState<number>(1)
+  const notify = ({message }: {message: string }) =>  toast.error(message, {
+      position: "top-right",
+      autoClose: 5000,
+      hideProgressBar: false,
+      closeOnClick: false,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "dark",
+      transition: Slide,
+    });
 
   // Refs
   const containerRef = useRef<HTMLDivElement>(null);
+  const chatScrollRef = useRef<HTMLElement | null>(null);
   const router = useRouter();
 
   // Effects
@@ -41,9 +55,16 @@ const Chat = () => {
     }
   }
   const handleSubmit = async () => {
-    setSubmitLoading(true);
-    setChat((prev) => [...prev, ""]);
-    if (!question.trim()) return;
+
+      if (!question.trim()) {
+        notify({ message: "Please enter a question" });
+        return;
+      }
+
+      setSubmitLoading(true);
+
+      // only now add placeholder
+      setChat((prev) => [...prev, ""]);
 
     // Send messages as array (required by API)
     const payload = {
@@ -56,46 +77,22 @@ const Chat = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
-<<<<<<< HEAD
     const data = await res.json();
-=======
->>>>>>> 3909b27 (Initial Commit)
-
-    if (!res.ok) {
-      console.error("Error calling /api/getAnswer");
+    if (!res.ok || !data.answer) {
+      console.error("error : ", data.error," status : ", res.status );
+      setChat((prev) => prev.slice(0, prev.length - 1));
+      setSubmitLoading(false);
+      notify({ message: data.error||data.message||"Something went wrong, please try again" });
       return;
     }
 
-<<<<<<< HEAD
+    setPage(data.page);
     setChat((prev) => {
       const updated = [...prev];
       updated[updated.length - 1] = data.answer;
       return updated;
     });
-=======
-    // Stream response (real-time chunks)
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder();
 
-    if (!reader) return;
-
-    let fullResponse = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      fullResponse += chunk;
-
-
-      setChat((prev) => {
-        const updated = [...prev];
-        updated[updated.length - 1] = fullResponse;
-        return updated;
-      });
-    }
->>>>>>> 3909b27 (Initial Commit)
     setSubmitLoading(false);
 
 
@@ -104,15 +101,25 @@ const Chat = () => {
   const handleUpload = () => {
     router.push("/");
   }
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTo({
+        top: chatScrollRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [chat]);
   return (
     <main className="md:h-screen w-screen flex flex-col md:flex-row justify-center items-center">
       <section className="md:h-full md:w-1/2 w-[97%] bg-[#f2f4f7] ">
         <button className="fixed top-4 cursor-pointer md:left-[45%] right-2 text-3xl bg-white shadow-xl rounded-full w-12 h-12 font-extralight z-100 " onClick={handleClose}>x</button>
-        <article className="overflow-auto md:h-[calc(100vh-100px)] h-[60vh] md:px-10 py-4">
-          <ChatViewer chat={chat} questionArray={questionArray} />
+        <article
+          ref={chatScrollRef}
+          className="overflow-auto md:h-[calc(100vh-100px)] h-[60vh] md:px-10 py-4"
+        >
+          <ChatViewer chat={chat} page={page} questionArray={questionArray} loading={submitLoading} />
         </article>
-        <div className="w-full h-[70px] md:h-[100px] flex justify-evenly items-center gap-2 border-y-2 sm:border-y-2 border-gray-400">
-<<<<<<< HEAD
+        <div className="w-full h-17.5 md:h-25 flex justify-evenly items-center gap-2 border-y-2 sm:border-y-2 border-gray-400">
           <input type="text" value={question} name="question" id="question" className="w-[90%] h-[60%] border-2 border-gray-400 rounded-2xl px-4 py-2" placeholder="Ask about the document" onChange={(e) => setQuestion(e.target.value)} onKeyDown={(e) => {
             if (e.key === "Enter") {
               handleSubmit();
@@ -120,12 +127,7 @@ const Chat = () => {
           }} />
 
           <button type="submit" className="bg-black text-white text-2xl font-bold px-4 h-[60%] md:rounded-2xl rounded-full" onClick={handleSubmit} >
-=======
-          <input type="text" value={question} name="question" id="question" className="w-[90%] h-[60%] border-2 border-gray-400 rounded-2xl px-4 py-2" placeholder="Ask about the document" onChange={(e) => setQuestion(e.target.value)} />
-
-          <button type="submit" className="bg-black text-white text-2xl font-bold px-4 h-[60%] md:rounded-2xl rounded-full" onClick={handleSubmit}>
->>>>>>> 3909b27 (Initial Commit)
-            {!submitLoading ? <Image src="/icons/send-4008.png" alt="send" width={50} height={50} className="md:w-[30px] w-[100%] invert" /> : <Image src="/icons/bouncing-circles-white.svg" alt="send" width={50} height={50} className="w-[20px]"
+            {!submitLoading ? <Image src="/icons/send-4008.png" alt="send" width={50} height={50} className="md:w-7.5 w-full invert" /> : <Image src="/icons/bouncing-circles-white.svg" alt="send" width={50} height={50} className="w-5"
             />}
           </button>
         </div>
@@ -136,7 +138,7 @@ const Chat = () => {
       <div ref={containerRef} className="hidden fixed top-0 md:h-screen md:w-screen size-full justify-center items-center">
         <div className="fixed h-screen w-screen opacity-20 bg-black flex justify-center items-center z-100">
         </div>
-        <div className="fixed md:w-[550px] md:h-[300px] w-[97%] rounded-4xl px-10 max-md:py-10 bg-white z-500 flex flex-col justify-center items-start gap-6">
+        <div className="fixed md:w-137.5 md:h-75 w-[97%] rounded-4xl px-10 max-md:py-10 bg-white z-500 flex flex-col justify-center items-start gap-6">
           <h1 className="text-2xl font-extrabold">Upload New PDF?</h1>
           <h3 className="text-lg font-normal">This will end your current chat session. Are you sure you want to upload a new PDF?</h3>
           <div className="flex w-full justify-end items-center gap-4">

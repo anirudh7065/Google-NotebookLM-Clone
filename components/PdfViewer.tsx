@@ -10,20 +10,14 @@ export default function PdfViewer({ file }: { file: File }) {
 
     useEffect(() => {
         if (!file || file.size === 0) return;
-<<<<<<< HEAD
         if (hasRendered.current) return; 
 
         hasRendered.current = true; 
-=======
-        if (hasRendered.current) return; // ✅ Block the 2nd render in StrictMode
 
-        hasRendered.current = true; // mark as rendered before starting
->>>>>>> 3909b27 (Initial Commit)
         const container = containerRef.current;
         if (!container) return;
 
         const renderPDF = async () => {
-<<<<<<< HEAD
             container.innerHTML = ""; 
 
             // Render PDF
@@ -37,40 +31,20 @@ export default function PdfViewer({ file }: { file: File }) {
                 const viewport = page.getViewport({ scale: 1.2 });
 
                 // Create canvas
-=======
-            container.innerHTML = ""; // clear previous renders
-
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await getDocument({ data: arrayBuffer }).promise;
-
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 1.2 });
-
->>>>>>> 3909b27 (Initial Commit)
                 const canvas = document.createElement("canvas");
                 const context = canvas.getContext("2d")!;
                 canvas.height = viewport.height;
                 canvas.width = viewport.width;
 
-<<<<<<< HEAD
                 // Render page
                 await page.render({ canvasContext: context, viewport,canvas }).promise;
 
                 // Add canvas to container
-=======
-                await page.render({ canvasContext: context, viewport }).promise;
-
->>>>>>> 3909b27 (Initial Commit)
                 canvas.id = `page_${i}`;
                 container.appendChild(canvas);
             }
         };
-<<<<<<< HEAD
         // Render PDF
-=======
-
->>>>>>> 3909b27 (Initial Commit)
         renderPDF();
 
         return () => {
@@ -80,13 +54,12 @@ export default function PdfViewer({ file }: { file: File }) {
     }, [file]);
 
     return (
-<<<<<<< HEAD
         // Render PDF
-=======
->>>>>>> 3909b27 (Initial Commit)
         <div
+            id="pdf-container"
             ref={containerRef}
-            className="pdf-container overflow-auto h-full shadow-xl"
+            className="pdf-container overflow-auto h-full shadow-2xl"
         />
+
     );
 }
