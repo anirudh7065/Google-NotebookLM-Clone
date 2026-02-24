@@ -1,4 +1,5 @@
 "use client";
+
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist/legacy/build/pdf.mjs";
 import { useEffect, useRef } from "react";
 
@@ -6,60 +7,64 @@ GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
 
 export default function PdfViewer({ file }: { file: File }) {
     const containerRef = useRef<HTMLDivElement>(null);
-    const hasRendered = useRef(false);
 
     useEffect(() => {
-        if (!file || file.size === 0) return;
-        if (hasRendered.current) return; 
-
-        hasRendered.current = true; 
+        if (!file) return;
 
         const container = containerRef.current;
         if (!container) return;
 
         const renderPDF = async () => {
-            container.innerHTML = ""; 
+            container.innerHTML = "";
 
-            // Render PDF
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await getDocument({ data: arrayBuffer }).promise;
 
-            // Render each page
             for (let i = 1; i <= pdf.numPages; i++) {
-                // Render page
                 const page = await pdf.getPage(i);
-                const viewport = page.getViewport({ scale: 1.2 });
 
-                // Create canvas
+                // Get container width
+                const containerWidth = container.clientWidth;
+
+                // Get original page viewport
+                const viewport = page.getViewport({ scale: 1 });
+
+                // Calculate scale to fit container width
+                const scale = containerWidth / viewport.width;
+
+                const scaledViewport = page.getViewport({ scale });
+
                 const canvas = document.createElement("canvas");
                 const context = canvas.getContext("2d")!;
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
 
-                // Render page
-                await page.render({ canvasContext: context, viewport,canvas }).promise;
+                canvas.height = scaledViewport.height;
+                canvas.width = scaledViewport.width;
 
-                // Add canvas to container
+                await page.render({
+                    canvasContext: context,
+                    viewport: scaledViewport,
+                    canvas
+                }).promise;
+
+                canvas.style.width = "100%";
+                canvas.style.height = "auto";
                 canvas.id = `page_${i}`;
+
                 container.appendChild(canvas);
             }
         };
-        // Render PDF
+
         renderPDF();
 
         return () => {
-            // Clear on unmount
-            if (container) container.innerHTML = "";
+            container.innerHTML = "";
         };
     }, [file]);
 
     return (
-        // Render PDF
         <div
-            id="pdf-container"
             ref={containerRef}
-            className="pdf-container overflow-auto h-full shadow-2xl"
+            className="w-full overflow-y-auto h-full shadow-xl"
         />
-
     );
 }

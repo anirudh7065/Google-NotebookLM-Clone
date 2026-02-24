@@ -1,34 +1,27 @@
 import fs from "fs/promises";
-import {
-  getDocument,
-  GlobalWorkerOptions,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
-import { TextItem, TextMarkedContent } from "pdfjs-dist/types/src/display/api";
-
-GlobalWorkerOptions.workerSrc = "pdfjs-dist/legacy/build/pdf.worker.min.mjs";
-
+import pdf from "pdf-parse/lib/pdf-parse.js";
 export default async function extractChunksFromPDF(path: string) {
-  const data = new Uint8Array(await fs.readFile(path));
-  const loadingTask = getDocument({ data });
-  const pdf = await loadingTask.promise;
+  // Read file
+  const buffer = await fs.readFile(path);
 
-  let fullText = "";
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    fullText += content.items
-      .map((item: TextItem | TextMarkedContent) => {
-        if ("str" in item) {
-          return item.str;
-        } else {
-          return "";
-        }
-      })
-      .join(" ");
+  // Extract text
+const data = await (pdf as any)(buffer);
+  const text = data.text || "";
 
-    return fullText
-      .split(/\n\s*\n/)
-      .filter((chunk) => chunk.trim().length > 30)
-      .map((text, idx) => ({ id: `chunk_${idx}`, text }));
+  // Simple chunking
+  const chunkSize = 800;
+  const chunks: { id: string; text: string }[] = [];
+
+  for (let i = 0; i < text.length; i += chunkSize) {
+    const chunkText = text.slice(i, i + chunkSize).trim();
+
+    if (chunkText.length > 50) {
+      chunks.push({
+        id: `chunk_${i / chunkSize}`,
+        text: chunkText,
+      });
+    }
   }
+
+  return chunks;
 }
