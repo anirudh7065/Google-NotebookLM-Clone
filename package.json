@@ -29,6 +29,11 @@
     "eslint-config-next": "^0.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+  "pdf-parse": {
+    "pdfjs-dist": "2.16.105"
   }
+}
   
 }
